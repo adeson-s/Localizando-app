@@ -1,11 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
-import {
-  registerWithEmail,
-  signInWithGoogle,
-  translateFirebaseError,
-} from "../../lib/auth";
+import { registerWithEmail, signInWithGoogle, translateFirebaseError } from "../../lib/firebase";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
@@ -189,10 +185,10 @@ export default function RegisterPage() {
 
           {/* Divider */}
           <div className="my-8 flex items-center">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
-          <span className="px-4 text-sm text-gray-400 bg-white">ou cadastre-se com</span>
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
-        </div>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+            <span className="px-4 text-sm text-gray-400 bg-white">ou cadastre-se com</span>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+          </div>
 
           {/* Google Registration Button */}
           <button
