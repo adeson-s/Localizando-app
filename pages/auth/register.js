@@ -17,7 +17,7 @@ export default function RegisterPage() {
     try {
       await registerWithEmail(form);
       setSuccess(true);
-      // router.push("/"); // redirecione para onde quiser
+      router.push("/"); // reedirecione para onde quiser
     } catch (e) {
       const msg = translateFirebaseError(e.code || e.message);
       setErr(msg);
