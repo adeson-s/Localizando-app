@@ -15,7 +15,7 @@ import {
   Share2,
   Heart
 } from 'lucide-react';
-import { lojas } from "../lojas"; // Ajuste o caminho se necessário
+import { lojas } from "../../lib/lojas"; // Ajuste o caminho se necessário
 
 export default function LojaDetalhes() {
   const router = useRouter();
