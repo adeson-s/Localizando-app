@@ -17,7 +17,7 @@ import {
   Clock,
   SlidersHorizontal
 } from "lucide-react";
-import { lojas } from "./lojas";
+import { lojas } from "../lib/lojas";
 
 /* ------------------ Utils ------------------ */
 

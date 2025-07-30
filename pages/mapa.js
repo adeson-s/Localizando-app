@@ -9,7 +9,7 @@ import {
 } from "@react-google-maps/api";
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { lojas } from "./lojas";
+import { lojas } from "../lib/lojas";
 import { SlidersHorizontal, X, Clock, MapPin } from "lucide-react";
 
 /* ------------------ Ícones por categoria (SVG dinâmico) ------------------ */
