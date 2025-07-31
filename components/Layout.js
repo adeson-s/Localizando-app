@@ -15,7 +15,7 @@ export default function Layout({ children }) {
 
   // Ajuste os hrefs conforme suas rotas reais
   const menuItems = [
-    { href: "/", label: "Buscar", Icon: Search },
+    { href: "/buscar", label: "Buscar", Icon: Search },
     { href: "/mapa", label: "Mapa", Icon: MapPin },
     { href: "/eventos", label: "Eventos", Icon: Play },
     { href: "/perfil", label: "Perfil", Icon: User }
