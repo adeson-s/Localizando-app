@@ -33,7 +33,7 @@ export default function LandingPage() {
             Encontre estabelecimentos próximos, horários atualizados e avaliações confiáveis
           </p>
           
-          {/* Quick Stats */}
+          {/* Quick Stats 
           <div className="flex justify-center space-x-8 text-sm opacity-80">
             <div className="flex items-center space-x-1">
               <CheckCircle className="w-4 h-4" />
@@ -43,7 +43,7 @@ export default function LandingPage() {
               <Star className="w-4 h-4 fill-current" />
               <span>4.7 estrelas</span>
             </div>
-          </div>
+          </div> */}
         </div>
       </header>
 
