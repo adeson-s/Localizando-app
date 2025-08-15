@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import mockEventos from "../lib/lojas";
 import { useAuth } from "../hooks/useAuth";
 import Link from "next/link";
 import { 
@@ -25,49 +26,21 @@ import {
   UserPlus,
   X
 } from "lucide-react";
-import { db } from "../lib/firebase"; // Importando a configuração do Firebase
-import { collection, getDocs } from "firebase/firestore"; // Função para pegar os dados
+
+
 
 export default function EventosPage() {
   const [userLocation, setUserLocation] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("todos");
-  const [showAuthModal, setShowAuthModal] = useState(false);  
-  const [isImageOpen, setIsImageOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [eventos, setEventos] = useState([]);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [eventos, setEventos] = useState(mockEventos);
   const { user, loading } = useAuth();
-  const isLoggedIn = !!user;
-  const currentUserId = 1;
+const isLoggedIn = !!user; 
+const currentUserId = 1;
 
-  // Função para buscar eventos do Firebase
-  const fetchEventos = async () => {
-    try {
-      const eventosRef = collection(db, "eventos"); // "eventos" é o nome da coleção no Firebase
-      const eventosSnapshot = await getDocs(eventosRef);
-      const eventosList = eventosSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setEventos(eventosList);
-      
-    } catch (error) {
-      console.error("Erro ao buscar eventos:", error);
-    }
-  };
-
-  const handleImageClick = (imageUrl) => {
-    setSelectedImage(imageUrl);
-    setIsImageOpen(true);
-  };
-
-  const handleCloseImage = () => {
-    setIsImageOpen(false);
-    setSelectedImage(null);
-  };
-
+  // Pegar localização do usuário
   useEffect(() => {
-    fetchEventos(); // Chama a função de buscar eventos
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -365,7 +338,7 @@ export default function EventosPage() {
 
                 {/* Imagem do evento */}
                 {evento.fotoEvento && (
-                  <div className="relative cursor-pointer" onClick={() => handleImageClick(evento.fotoEvento)}>
+                  <div className="relative">
                     <img
                       src={evento.fotoEvento}
                       alt="Evento"
@@ -530,24 +503,6 @@ export default function EventosPage() {
             <p className="text-xs text-gray-500 text-center mt-4">
               Ao continuar, você concorda com nossos Termos de Uso
             </p>
-          </div>
-        </div>
-      )}
-{/* Modal de Imagem em Tela Cheia */}
-      {isImageOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-          <div className="relative">
-            <img
-              src={selectedImage}
-              alt="Imagem do Evento"
-              className="max-w-full max-h-screen object-contain"
-            />
-            <button
-              onClick={handleCloseImage}
-              className="absolute top-4 right-4 bg-white p-2 rounded-full text-gray-900 hover:bg-gray-200"
-            >
-              <X className="w-5 h-5" />
-            </button>
           </div>
         </div>
       )}

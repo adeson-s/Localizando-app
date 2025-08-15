@@ -1,13 +1,23 @@
 "use client";
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, Store, ArrowRight, ShoppingBag } from "lucide-react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../lib/firebase"; 
+import { useRouter } from "next/navigation";
 
-// Simulando a função de auth (você pode substituir pela sua)
-const signInWithEmail = async (email, password, isStore = false) => {
-  // Simular delay da API
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  if (email === "error@test.com") throw new Error("Credenciais inválidas");
-  return { user: { email, isStore } };
+// Função de login real usando Firebase Auth + Firestore
+const signInWithEmail = async (email, password) => {
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  const uid = userCredential.user.uid;
+
+  // Busca os dados da loja no Firestore
+  const lojaDoc = await getDoc(doc(db, "lojas", uid));
+  if (!lojaDoc.exists()) {
+    throw new Error("Loja não encontrada no sistema.");
+  }
+
+  return { user: { ...userCredential.user, ...lojaDoc.data(), isStore: true } };
 };
 
 export default function LojistaLoginPage() {
@@ -16,15 +26,18 @@ export default function LojistaLoginPage() {
   const [err, setErr] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [success, setSuccess] = useState(false);
+  const router = useRouter();
 
   async function handleEmailLogin(e) {
     e?.preventDefault();
     setErr("");
     setLoading(true);
     try {
-      await signInWithEmail(form.email, form.password, true);
+      await signInWithEmail(form.email, form.password);
       setSuccess(true);
-      // router.push("/app/dashboard-lojista");
+      setTimeout(() => {
+        router.push("/app/dashboard-lojista"); // redireciona após login
+      }, 2000);
     } catch (e) {
       setErr(e.message);
     } finally {
@@ -47,7 +60,7 @@ export default function LojistaLoginPage() {
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Acesso autorizado!</h2>
             <p className="text-gray-600 mb-4">Bem-vindo ao painel da sua loja</p>
             <div className="w-full bg-gray-200 rounded-full h-1 mb-4">
-              <div className="bg-orange-500 h-1 rounded-full animate-pulse" style={{width: '100%'}}></div>
+              <div className="bg-orange-500 h-1 rounded-full animate-pulse" style={{ width: "100%" }}></div>
             </div>
             <p className="text-sm text-gray-500">Redirecionando para o dashboard...</p>
           </div>
@@ -199,8 +212,6 @@ export default function LojistaLoginPage() {
             </a>
           </p>
         </div>
-
-             
       </div>
     </div>
   );

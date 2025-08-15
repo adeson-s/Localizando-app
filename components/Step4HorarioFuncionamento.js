@@ -151,11 +151,60 @@ const Step4HorarioFuncionamento = ({ form, setForm, weekDays }) => {
                         />
                       </div>
                     </div>
-                  </div>
+                  </div>                  
                 </div>
               );
             })}
           </div>
+          {/* Aceite dos Termos e Política */}
+<div className="pt-6 border-t border-gray-200 space-y-4">
+  <div className="flex items-start gap-3">
+    <input
+      type="checkbox"
+      checked={form.acceptTerms}
+      onChange={(e) =>
+        setForm((f) => ({ ...f, acceptTerms: e.target.checked }))
+      }
+      id="acceptTerms"
+      className="mt-1 accent-orange-600 w-5 h-5"
+    />
+    <label htmlFor="acceptTerms" className="text-sm text-gray-700 leading-relaxed">
+      Eu li e aceito os{" "}
+      <a
+        href="/termos"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-orange-600 underline hover:text-orange-700"
+      >
+        Termos de Uso
+      </a>.
+    </label>
+  </div>
+
+  <div className="flex items-start gap-3">
+    <input
+      type="checkbox"
+      checked={form.acceptPrivacy}
+      onChange={(e) =>
+        setForm((f) => ({ ...f, acceptPrivacy: e.target.checked }))
+      }
+      id="acceptPrivacy"
+      className="mt-1 accent-orange-600 w-5 h-5"
+    />
+    <label htmlFor="acceptPrivacy" className="text-sm text-gray-700 leading-relaxed">
+      Eu concordo com a{" "}
+      <a
+        href="/privacidade"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-orange-600 underline hover:text-orange-700"
+      >
+        Política de Privacidade
+      </a>.
+    </label>
+  </div>
+</div>
+
         </div>
       </div>
     </div>

@@ -1,7 +1,6 @@
 // pages/eventos/novo.js
 "use client";
-import { db, addDoc, collection, doc, getDoc  } from "../../lib/firebase";
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
@@ -23,6 +22,15 @@ const MapSelector = dynamic(
   { ssr: false }
 );
 
+// Simulação de login (troque pela sua lógica real)
+const isLoggedIn = true;
+const currentUser = {
+  id: 1,
+  nome: "Você",
+  foto: "/user-default.jpg",
+  verificado: true,
+};
+
 const categorias = [
   "Gastronomia",
   "Cultura",
@@ -35,47 +43,8 @@ const categorias = [
 
 const libraries = ["places"];
 
-const uploadToCloudinary = async (file) => {
-  const formData = new FormData();
-  formData.append("file", file); // O arquivo da imagem
-  formData.append("upload_preset", process.env.NEXT_PUBLIC_UPLOAD_PRESET); // Preset de upload
-
-  try {
-    const response = await fetch(process.env.NEXT_PUBLIC_CLOUDINARY_URL, {
-      method: "POST",
-      body: formData,
-    });
-
-    // Logar o status e a resposta para depuração
-    console.log("Resposta do Cloudinary:", response);
-
-    if (!response.ok) {
-      const errorText = await response.text(); // Tentar ler o erro como texto
-      throw new Error(`Erro no upload: ${errorText}`);
-    }
-
-    const data = await response.json(); // Tenta analisar o JSON
-    console.log("Resposta do Cloudinary JSON:", data);
-
-    if (data.secure_url) {
-      return data.secure_url; // Retorna a URL da imagem
-    } else {
-      throw new Error("Não foi possível obter a URL da imagem");
-    }
-  } catch (error) {
-    console.error("Erro ao fazer upload da imagem:", error.message);
-    throw new Error("Erro ao fazer upload da imagem. Tente novamente.");
-  }
-};
-
-
-
 export default function NovoEventoPage() {
   const router = useRouter();
-const auth = getAuth();
-  const [user, setUser] = useState(null); 
-const [nomeLoja, setNomeLoja] = useState(""); 
-
 
   // carrega a API do Google aqui também para usarmos o Geocoder no botão "Minha localização"
   const { isLoaded: isGoogleLoaded } = useJsApiLoader({
@@ -102,86 +71,8 @@ const [nomeLoja, setNomeLoja] = useState("");
 
   // Se não estiver logado, redireciona
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      if (currentUser) {
-        setUser(currentUser); // Define o usuário quando estiver logado
-         buscarNomeLojaPeloUid(currentUser.uid); // Chama a função para buscar o nome da loja
-      } else {
-        setUser(null); // Se o usuário não estiver logado, define como null
-        router.replace("/eventos"); // Redireciona se não estiver logado
-      }
-    });
-
-    return () => unsubscribe(); // Cleanup da assinatura
+    if (!isLoggedIn) router.replace("/eventos");
   }, [router]);
-
-  // Função para buscar o storeId do usuário
-const buscarStoreId = async (uid) => {
-  try {
-    // Ref para o documento do usuário na coleção "users"
-    const userRef = doc(db, "users", uid);
-    const userSnap = await getDoc(userRef);
-    
-    if (userSnap.exists()) {
-      const userData = userSnap.data();
-
-      // Verificando se o storeId existe no usuário
-      if (userData && userData.storeId) {
-        return userData.storeId; // Retorna o storeId encontrado
-      } else {
-        return null;
-      }
-    } else {
-      return null;
-    }
-  } catch (error) {
-    console.error("Erro ao buscar storeId:", error);
-    return null;
-  }
-};
-
-// Função principal que junta a busca do storeId e do nome da loja
-const buscarNomeLojaPeloUid = async (uid) => {
-  try {
-    // Passo 1: Buscar o storeId do usuário
-    const storeId = await buscarStoreId(uid);
-    if (!storeId) {
-      setNomeLoja("Loja não encontrada");
-      return;
-    }
-
-    // Passo 2: Buscar o nome da loja usando o storeId
-    await buscarNomeLoja(storeId);
-  } catch (error) {
-    console.error("Erro ao buscar o nome da loja:", error);
-    setNomeLoja("Erro ao buscar nome da loja");
-  }
-};
-
-// Função para buscar o nome da loja usando o storeId
-const buscarNomeLoja = async (storeId) => {
-  try {
-    // Ref para o documento da loja na coleção "lojas"
-    const lojaRef = doc(db, "lojas", storeId);
-    const lojaSnap = await getDoc(lojaRef);
-    
-    if (lojaSnap.exists()) {
-      const lojaData = lojaSnap.data();
-      
-      // Verifica se o campo storeName existe
-      if (lojaData && lojaData.storeName) {        
-        setNomeLoja(lojaData.storeName); // Define o nome da loja
-      } else {
-        setNomeLoja("Loja sem nome");
-      }
-    } else {
-      setNomeLoja("Loja não registrada");
-    }
-  } catch (error) {
-    console.error("Erro ao buscar nome da loja:", error);
-    setNomeLoja("Erro ao buscar nome da loja");
-  }
-};
 
   // Preview da imagem (file ou URL)
   useEffect(() => {
@@ -232,71 +123,51 @@ const buscarNomeLoja = async (storeId) => {
     }
   }, []);
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  if (!form.descricao || !form.dataEvento || !form.horaEvento || !form.local) {
-    alert("Preencha descrição, data, hora e local.");
-    return;
-  }
-
-  let fotoEvento = form.fotoEventoUrl || preview || "/default-event.jpg"; // Caso o usuário não tenha enviado foto
-
-  // Se houver um arquivo de imagem, faz o upload para o Cloudinary
-  if (form.fotoEventoFile) {
-    try {
-      fotoEvento = await uploadToCloudinary(form.fotoEventoFile); // Upload da foto para o Cloudinary
-    } catch (error) {
-      console.error("Erro ao fazer upload da imagem:", error);
-      alert("Houve um erro ao fazer upload da imagem. Tente novamente.");
+    if (!form.descricao || !form.dataEvento || !form.horaEvento || !form.local) {
+      alert("Preencha descrição, data, hora e local.");
       return;
     }
-  }
 
-  const dataCompleta = `${form.dataEvento} ${form.horaEvento}`;
+    const dataCompleta = `${form.dataEvento} ${form.horaEvento}`;
+    const fotoEvento = form.fotoEventoUrl || preview || "/default-event.jpg";
 
-  const novo = {
-    usuario: {
-      id: user.uid,
-      nome: user.name || user.displayName || nomeLoja || "Nome não fornecido",
-      foto: user.photoURL || "../../images/user-default.jpg",
-      verificado: user.email || false,
-    },
-    fotoEvento, // A URL da imagem
-    descricao: form.descricao,
-    dataEvento: dataCompleta,
-    local: form.local,
-    lat: form.lat ? Number(form.lat) : undefined,
-    lng: form.lng ? Number(form.lng) : undefined,
-    dataPost: new Date().toISOString(),
-    categoria: form.categoria || "Outros",
-    preco: form.preco || "Gratuito",
-    participantes: 0,
-    interessados: 0,
-    curtidas: 0,
-    comentarios: 0,
-    compartilhamentos: 0,
-    isLiked: false,
-    isSaved: false,
-    isInterested: false,
-  };
+    const novo = {
+      id: Date.now(),
+      usuario: {
+        id: currentUser.id,
+        nome: currentUser.nome,
+        foto: currentUser.foto,
+        verificado: currentUser.verificado,
+      },
+      fotoEvento,
+      descricao: form.descricao,
+      dataEvento: dataCompleta,
+      local: form.local,
+      lat: form.lat ? Number(form.lat) : undefined,
+      lng: form.lng ? Number(form.lng) : undefined,
+      dataPost: new Date().toISOString(),
+      categoria: form.categoria || "Outros",
+      preco: form.preco || "Gratuito",
+      participantes: 0,
+      interessados: 0,
+      curtidas: 0,
+      comentarios: 0,
+      compartilhamentos: 0,
+      isLiked: false,
+      isSaved: false,
+      isInterested: false,
+    };
 
-  try {
-    // Adiciona o evento no Firestore
-    const docRef = await addDoc(collection(db, "eventos"), novo);
-    console.log("Evento registrado com ID:", docRef.id);
-
-    // Se desejar, também armazene no localStorage para visualização imediata
+    // Guarda no localStorage para o feed ler
     const saved = JSON.parse(localStorage.getItem("newEvents") || "[]");
     localStorage.setItem("newEvents", JSON.stringify([novo, ...saved]));
 
     alert("Evento criado com sucesso!");
     router.push("/eventos");
-  } catch (e) {
-    console.error("Erro ao adicionar evento: ", e);
-    alert("Houve um erro ao criar o evento. Tente novamente.");
-  }
-};
+  };
 
   const pegarMinhaLocalizacao = async () => {
     if (!navigator.geolocation) {

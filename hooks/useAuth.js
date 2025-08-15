@@ -1,76 +1,57 @@
-"use client";
-import { createContext, useContext, useEffect, useState } from "react";
-import {
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithEmailAndPassword,
-  signOut,
-  updateProfile,
-} from "firebase/auth";
-import { auth } from "../lib/firebase";   
+import { useState, useEffect, useContext, createContext } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "../lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
-const AuthCtx = createContext();
+const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser]           = useState(null);   // {uid, name, email, avatar}
-  const [loading, setLoading]     = useState(true);
-  const [isGuest,     setGuest]   = useState(false);  // p/ “convidado”
-
-  // 🔄 ouve login/logout em tempo‑real
-  useEffect(() => {
-    const off = onAuthStateChanged(auth, async (fbUser) => {
-      if (!fbUser) {
-        setUser(null);
-        setGuest(false);
-        setLoading(false);
-        return;
-      }
-
-      // Se não tiver displayName você pega de um “profile” no Firestore, etc.
-      setUser({
-        uid:    fbUser.uid,
-        name:   fbUser.displayName ?? "Sem nome",
-        email:  fbUser.email,
-        avatar: fbUser.photoURL,          // pode vir null
-      });
-      setLoading(false);
-    });
-
-    return () => off();
-  }, []);
-
-  /* ---------- Actions ---------- */
-  const loginEmail = (email, pass) =>
-    signInWithEmailAndPassword(auth, email, pass);
-
-  const loginGoogle = () =>
-    signInWithPopup(auth, new GoogleAuthProvider());
-
-  const loginGuest = () => {
-    setGuest(true);
-    setUser({
-      name:   "Convidado",
-      email:  "",
-      avatar: null,
-    });
-  };
-
-  const logout = () => signOut(auth);
-
-  const value = {
-    user,
-    loading,
-    isGuest,
-    isLojista: !!user?.storeId,    // ex.: marcou isso na coleção “stores”
-    isAuthenticated: !!user && !isGuest,
-    loginEmail,
-    loginGoogle,
-    loginGuest,
-    logout,
-  };
-
-  return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
+  const authState = useProvideAuth();
+  return <AuthContext.Provider value={authState}>{children}</AuthContext.Provider>;
 }
 
-export const useAuth = () => useContext(AuthCtx);
+export const useAuth = () => useContext(AuthContext);
+
+function useProvideAuth() {
+  const [user, setUser] = useState(null);
+  const [isLojista, setIsLojista] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        const userDocRef = doc(db, "users", fbUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        let userData = {};
+        if (userDocSnap.exists()) {
+          userData = userDocSnap.data();
+        }
+
+        setUser({
+          uid: fbUser.uid,
+          email: fbUser.email,
+          name: userData.ownerName || userData.name || fbUser.displayName || "",
+          isLojista: userData.isLojista || false,
+          storeId: userData.storeId || null,
+          // ... outros campos
+        });
+
+        setIsLojista(userData.isLojista || false);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsLojista(false);
+        setIsAuthenticated(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  function logout() {
+    auth.signOut();
+  }
+
+  return { user, isLojista, isAuthenticated, logout };
+}

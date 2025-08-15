@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, UserPlus, Store } from "lucide-react";
 import { signInWithEmailAndPassword, signInAnonymously, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../lib/firebase";
+import { useRouter } from "next/navigation";
+
 
 const signInWithEmail = async (email, password) => {
   const result = await signInWithEmailAndPassword(auth, email, password);
@@ -26,6 +28,8 @@ export default function LoginPage() {
   const [err, setErr] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [success, setSuccess] = useState(false);
+  const router = useRouter();
+
 
   async function handleEmailLogin(e) {
     e.preventDefault();
@@ -34,7 +38,9 @@ export default function LoginPage() {
     try {
       await signInWithEmail(form.email, form.password);
       setSuccess(true);
-      // router.push("/");
+      setTimeout(() => {
+  router.push("/perfil");
+}, 1000);
     } catch (e) {
       setErr(e.message);
     } finally {
@@ -47,19 +53,6 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithGoogle();
-      setSuccess(true);
-    } catch (e) {
-      setErr(e.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleGuest() {
-    setErr("");
-    setLoading(true);
-    try {
-      await signInAsGuest();
       setSuccess(true);
     } catch (e) {
       setErr(e.message);
@@ -217,33 +210,61 @@ export default function LoginPage() {
               </svg>
               <span>Google</span>
             </button>
-
-            <button
-              onClick={handleGuest}
-              disabled={loading}
-              className="w-full bg-gray-100 text-gray-700 rounded-2xl py-4 font-semibold hover:bg-gray-200 transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-3 transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <User className="w-5 h-5" />
-              <span>Entrar como convidado</span>
-            </button>
+           
           </div>
         </div>
 
         {/* Footer Links */}
-        <div className="mt-8 text-center space-y-4">
-          <p className="text-gray-600">
-            Ainda não tem conta?{" "}
-            <a href="/auth/register" className="text-emerald-600 font-semibold hover:text-emerald-700 transition-colors">
-              Cadastre-se
+         <div className="mt-12 space-y-6">
+      
+      {/* Action Cards */}
+      <div className="grid gap-4">
+        {/* Cliente Card */}
+        <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-6 hover:shadow-lg hover:border-emerald-200 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-100/50 rounded-full -mr-10 -mt-10 group-hover:scale-110 transition-transform duration-300"></div>
+          <div className="relative">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                <UserPlus className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Novo por aqui?</h3>
+                <p className="text-sm text-gray-600">Crie sua conta gratuitamente</p>
+              </div>
+            </div>
+            <a 
+              href="/auth/register" 
+              className="inline-flex items-center justify-center w-full px-4 py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors duration-200"
+            >
+              Cadastrar-se
             </a>
-          </p>
-          <p className="text-gray-600">
-            É lojista?{" "}
-            <a href="/auth/lojista-login" className="text-emerald-600 font-semibold hover:text-emerald-700 transition-colors">
-              Acesse aqui
-            </a>
-          </p>
+          </div>
         </div>
+
+        {/* Lojista Card */}
+        <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-gradient-to-br from-orange-50 to-orange-100/50 p-6 hover:shadow-lg hover:border-orange-200 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-orange-100/50 rounded-full -mr-10 -mt-10 group-hover:scale-110 transition-transform duration-300"></div>
+          <div className="relative">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center group-hover:bg-orange-200 transition-colors">
+                <Store className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">É lojista?</h3>
+                <p className="text-sm text-gray-600">Cadastre sua loja conosco</p>
+              </div>
+            </div>
+            <a 
+              href="/auth/lojista-cadastro" 
+              className="inline-flex items-center justify-center w-full px-4 py-2.5 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-200"
+            >
+              Cadastrar Loja
+            </a>
+          </div>
+        </div>
+      </div> </div> 
+
+
       </div>
     </div>
   );

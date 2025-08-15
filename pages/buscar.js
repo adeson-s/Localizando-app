@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -17,9 +17,10 @@ import {
   Clock,
   SlidersHorizontal
 } from "lucide-react";
-import { lojas } from "../lib/lojas";
 
-/* ------------------ Utils ------------------ */
+import { db } from "../lib/firebase";
+import { collection, getDocs } from "firebase/firestore";
+import { gcategories } from '../lib/categorias';
 
 // Haversine – distância em KM
 function calcDistance(lat1, lon1, lat2, lon2) {
@@ -50,16 +51,14 @@ function parseHora(hstr) {
   return h + (m || 0) / 60;
 }
 
-// Versão robusta: aceita dois formatos de horário:
-// 1) { abre: "09:00", fecha: "18:00" }
-// 2) { segunda: "09:00 - 18:00", ... }
+// Verifica se a loja está aberta agora, considerando formato por dia ou simples
 function estaAberto(loja) {
   const now = new Date();
   const horaAtual = now.getHours() + now.getMinutes() / 60;
 
   if (!loja?.horario) return false;
 
-  // Caso 1: formato simples (abre/fecha)
+  // Caso simples (abre/fecha)
   if (loja.horario.abre && loja.horario.fecha) {
     const abre = parseHora(loja.horario.abre);
     const fecha = parseHora(loja.horario.fecha);
@@ -67,7 +66,7 @@ function estaAberto(loja) {
     return horaAtual >= abre && horaAtual < fecha;
   }
 
-  // Caso 2: formato por dia ("segunda": "09:00 - 18:00")
+  // Caso por dia (segunda, terca, ...)
   const dias = [
     "domingo",
     "segunda",
@@ -91,6 +90,10 @@ function estaAberto(loja) {
 }
 
 export default function HomePage() {
+  const [lojas, setLojas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // filtros
   const [searchText, setSearchText] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [maxDistanceKm, setMaxDistanceKm] = useState(10);
@@ -99,6 +102,7 @@ export default function HomePage() {
   const [userLocation, setUserLocation] = useState(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+  // busca localização do usuário
   useEffect(() => {
     if (navigator?.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -113,44 +117,40 @@ export default function HomePage() {
     }
   }, []);
 
-  // Categorias "rápidas" (fixas, só para o carrossel)
-  const categories = [
-    {
-      name: "Roupas",
-      icon: ShoppingBag,
-      color: "bg-blue-500",
-      textColor: "text-blue-500",
-      bgLight: "bg-blue-50",
-    },
-    {
-      name: "Restaurantes",
-      icon: Utensils,
-      color: "bg-orange-400",
-      textColor: "text-orange-400",
-      bgLight: "bg-orange-50",
-    },
-    {
-      name: "Supermercados",
-      icon: ShoppingCart,
-      color: "bg-green-500",
-      textColor: "text-green-500",
-      bgLight: "bg-green-50",
-    },
-    {
-      name: "Academias",
-      icon: Dumbbell,
-      color: "bg-purple-400",
-      textColor: "text-purple-400",
-      bgLight: "bg-purple-50",
-    },
-  ];
+  // busca lojas no Firestore
+  useEffect(() => {
+    async function carregarLojas() {
+      try {
+        const snapshot = await getDocs(collection(db, "lojas"));
+        const lista = [];
+        snapshot.forEach((doc) => {
+          lista.push({ id: doc.id, ...doc.data() });
+        });
+        setLojas(lista);
+      } catch (err) {
+        console.error("Erro ao buscar lojas:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    carregarLojas();
+  }, []);
 
-  // Categorias dinâmicas para o modal de filtros
+  // Categorias rápidas para o carrossel (fixas)
+  const categories  = gcategories.map(category => ({
+  name: category.name,
+  icon: category.icon,
+  color: category.color,
+  textColor: category.textColor,
+  bgLight: category.bgLight,
+}));
+
+  // Categorias dinâmicas para filtro
   const categorias = useMemo(() => {
     if (!Array.isArray(lojas)) return [];
-    const set = new Set(lojas.map((l) => l.type).filter(Boolean));
+    const set = new Set(lojas.map((l) => l.category).filter(Boolean));
     return Array.from(set).sort();
-  }, []);
+  }, [lojas]);
 
   function toggleCategory(cat) {
     setSelectedCategories((prev) =>
@@ -163,7 +163,7 @@ export default function HomePage() {
 
     let list = [...lojas];
 
-    // Busca
+    // Busca texto
     const text = searchText.trim().toLowerCase();
     if (text) {
       list = list.filter((l) => {
@@ -224,6 +224,7 @@ export default function HomePage() {
     openNowOnly,
     sortBy,
     userLocation,
+    lojas,
   ]);
 
   function clearFilters() {
@@ -265,6 +266,14 @@ export default function HomePage() {
     maxDistanceKm !== 10 ||
     sortBy !== "distance";
 
+  if (loading) {
+    return (
+      <div className="max-w-sm mx-auto p-6 text-center">
+        <p className="text-gray-700">Carregando lojas...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-sm mx-auto bg-white min-h-screen">
       {/* Header com Search */}
@@ -279,7 +288,7 @@ export default function HomePage() {
             className="flex-1 outline-none text-gray-700"
           />
           <div className="flex items-center space-x-2 ml-2">
-          <button
+            <button
               onClick={() => setIsFilterOpen(true)}
               className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 hasActiveFilters
@@ -391,80 +400,89 @@ export default function HomePage() {
 
         <div className="space-y-4">
           {filteredBusinesses.map((business) => {
-          const isOpen = estaAberto(business);
-          return (
-            <Link
-              key={business.id}
-              href={`/loja/${business.id}`}
-              className="block bg-white border border-gray-100 rounded-2xl p-4 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-            >
-              <div className="flex items-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl mr-4 shadow-md">
-                  {business.logo ? (
-                    <img
-                      src={business.logo}
-                      alt={business.name}
-                      className="w-full h-full object-cover rounded-2xl"
-                    />
-                  ) : (
-                    getBusinessIcon(business.type)
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between">
-                    <h3 className="font-bold text-gray-900 text-lg truncate pr-2">
-                      {business.name}
-                    </h3>
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${
-                        isOpen
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {isOpen ? "Aberto" : "Fechado"}
-                    </span>
+            const isOpen = estaAberto(business);
+            return (
+              <Link
+                key={business.id}
+                href={`/loja/${business.id}`}
+                className="block bg-white border border-gray-100 rounded-2xl p-4 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+              >
+                <div className="flex items-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl mr-4 shadow-md">
+                    {business.logoUrl ? (
+                      <img
+                        src={business.logoUrl}
+                        alt={business.name}
+                        className="w-full h-full object-cover rounded-2xl"
+                      />
+                    ) : (
+                      getBusinessIcon(business.category)
+                    )}
                   </div>
 
-                  <p className="text-gray-600 text-sm mb-1">
-                    {business.type}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <h3 className="font-bold text-gray-900 text-lg truncate pr-2">
+                        {business.storeName}
+                      </h3>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${
+                          isOpen
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {isOpen ? "Aberto" : "Fechado"}
+                      </span>
+                    </div>
 
-                  {business.desc && (
-                    <p className="text-gray-500 text-xs mb-2 truncate">
-                      {business.desc}
-                    </p>
-                  )}
+                    <p className="text-gray-600 text-sm mb-1">{business.category}</p>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      {business.rating && (
-                        <div className="flex items-center">
-                          <div className="flex mr-1">
-                            {renderStars(business.rating)}
+                   {Array.isArray(business.tags) && business.tags.length > 0 && (
+  <div className="flex flex-wrap gap-1 mb-2">
+    {business.tags.slice(0, 3).map((tag, i) => (
+      <span
+        key={i}
+        className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-[10px] font-medium"
+      >
+        {tag}
+      </span>
+    ))}
+
+    {business.tags.length > 4 && (
+      <span className="text-gray-400 text-[10px] font-medium">
+        +{business.tags.length - 4}
+      </span>
+    )}
+  </div>
+)}
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        {business.rating && (
+                          <div className="flex items-center">
+                            <div className="flex mr-1">{renderStars(business.rating)}</div>
+                            <span className="text-xs text-gray-600">
+                              {Number(business.rating).toFixed(1)}
+                            </span>
                           </div>
-                          <span className="text-xs text-gray-600">
-                            {Number(business.rating).toFixed(1)}
-                          </span>
-                        </div>
-                      )}
+                        )}
 
-                      {userLocation && business.distanceValue !== undefined && (
-                        <div className="flex items-center text-blue-500">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          <span className="text-xs font-medium">
-                            {business.distanceValue.toFixed(1)} km
-                          </span>
-                        </div>
-                      )}
+                        {userLocation && business.distanceValue !== undefined && (
+                          <div className="flex items-center text-blue-500">
+                            <MapPin className="w-3 h-3 mr-1" />
+                            <span className="text-xs font-medium">
+                              {business.distanceValue.toFixed(1)} km
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          );
-        })}
+              </Link>
+            );
+          })}
         </div>
       </div>
 
@@ -473,151 +491,86 @@ export default function HomePage() {
         <>
           <div
             onClick={() => setIsFilterOpen(false)}
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="fixed inset-0 bg-black bg-opacity-30 z-40"
           ></div>
-          <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-white rounded-t-3xl shadow-2xl p-6 z-50 max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Filtros</h3>
-              <button
-                onClick={() => setIsFilterOpen(false)}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-600" />
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-xl p-6 z-50 max-w-sm mx-auto max-h-[80vh] overflow-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-lg">Filtros</h3>
+              <button onClick={() => setIsFilterOpen(false)}>
+                <X className="w-6 h-6 text-gray-600" />
               </button>
             </div>
 
-            {/* Todas as Categorias */}
-            <div className="mb-6">
-              <h4 className="font-semibold text-gray-900 mb-3">Categorias</h4>
-              <div className="flex flex-wrap gap-2">
-                {categorias.map((cat) => {
-                  const active = selectedCategories.includes(cat);
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => toggleCategory(cat)}
-                      className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
-                        active
-                          ? "bg-blue-500 text-white border-blue-500 shadow-md"
-                          : "bg-white text-gray-700 border-gray-300 hover:border-blue-300 hover:shadow-sm"
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  );
-                })}
+            <div className="mb-4">
+              <label className="block font-semibold mb-1">Categorias</label>
+              <div className="flex flex-wrap gap-2 max-h-32 overflow-auto scrollbar-hide">
+                {categorias.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => toggleCategory(cat)}
+                    className={`px-3 py-1 rounded-full border ${
+                      selectedCategories.includes(cat)
+                        ? "bg-blue-500 text-white border-blue-500"
+                        : "border-gray-300 text-gray-700"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Distância */}
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="font-semibold text-gray-900">Distância</h4>
-                <span className="text-sm text-blue-600 font-medium">
-                  {maxDistanceKm} km
-                </span>
-              </div>
+            <div className="mb-4">
+              <label className="block font-semibold mb-1">Distância máxima (km)</label>
               <input
                 type="range"
                 min={1}
                 max={30}
                 value={maxDistanceKm}
                 onChange={(e) => setMaxDistanceKm(Number(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                className="w-full"
               />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>1 km</span>
-                <span>30 km</span>
-              </div>
+              <div className="text-right text-sm text-gray-600">{maxDistanceKm} km</div>
             </div>
 
-            {/* Aberto agora */}
-            <div className="mb-6">
-              <label className="flex items-center justify-between p-3 bg-gray-50 rounded-xl cursor-pointer">
-                <div className="flex items-center">
-                  <Clock className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="font-medium text-gray-900">Aberto agora</span>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={openNowOnly}
-                  onChange={(e) => setOpenNowOnly(e.target.checked)}
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                />
+            <div className="mb-4 flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="openNowOnly"
+                checked={openNowOnly}
+                onChange={() => setOpenNowOnly((v) => !v)}
+                className="cursor-pointer"
+              />
+              <label htmlFor="openNowOnly" className="cursor-pointer select-none">
+                Mostrar apenas abertas agora
               </label>
             </div>
 
-            {/* Ordenação */}
-            <div className="mb-6">
-              <h4 className="font-semibold text-gray-900 mb-3">Ordenar por</h4>
+            <div className="mb-4">
+              <label className="block font-semibold mb-1">Ordenar por</label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full border border-gray-300 rounded-xl p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded px-2 py-1"
               >
-                <option value="distance">Mais perto</option>
-                <option value="rating">Melhor avaliação</option>
-                <option value="name">A-Z</option>
+                <option value="distance">Distância</option>
+                <option value="rating">Avaliação</option>
+                <option value="name">Nome</option>
               </select>
             </div>
 
-            {/* Botões de ação */}
-            <div className="flex space-x-3">
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="flex-1 bg-gray-100 text-gray-700 font-medium rounded-xl py-3 hover:bg-gray-200 transition-colors"
-                >
-                  Limpar filtros
-                </button>
-              )}
-              <button
-                onClick={() => setIsFilterOpen(false)}
-                className="flex-1 bg-blue-500 text-white font-medium rounded-xl py-3 hover:bg-blue-600 transition-colors"
-              >
-                Aplicar filtros
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                clearFilters();
+                setIsFilterOpen(false);
+              }}
+              className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition-colors"
+            >
+              Limpar filtros
+            </button>
           </div>
         </>
       )}
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-white border-t border-gray-200">
-        <div className="flex justify-around py-3">
-          <button className="flex flex-col items-center p-2">
-            <Search className="w-6 h-6 text-blue-500" />
-          </button>
-          <button className="flex flex-col items-center p-2">
-            <HomeIcon className="w-6 h-6 text-gray-400" />
-          </button>
-          <button className="flex flex-col items-center p-2">
-            <Play className="w-6 h-6 text-gray-400" />
-          </button>
-          <button className="flex flex-col items-center p-2">
-            <User className="w-6 h-6 text-gray-400" />
-          </button>
-        </div>
-        <div className="h-1 w-32 bg-black rounded-full mx-auto mb-2"></div>
-      </div>
-
-      <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #3b82f6;
-          cursor: pointer;
-        }
-      `}</style>
     </div>
   );
 }
