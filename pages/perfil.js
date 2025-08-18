@@ -68,7 +68,7 @@ export default function Perfil() {
   const profileData = {
     name: user?.name || "Convidado",
     email: user?.email || "",
-    avatar: storeData?.logoUrl || null,
+    avatar: storeData?.logoUrl || user.photoURL || null,
     favoriteCount: 12,
     reviewCount: 8,
     nameLoja: storeData?.nameLoja || "",
