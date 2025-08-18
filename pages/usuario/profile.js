@@ -26,7 +26,6 @@ export default function Perfil() {
   const router = useRouter();
   const auth = getAuth();
   const fileInputRef = useRef(null);
-  
   const [userId, setUserId] = useState(null);
   const [userData, setUserData] = useState({
     name: "",

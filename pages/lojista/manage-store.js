@@ -10,6 +10,7 @@ import {
   AlertCircle, Eye, EyeOff, Palette, Type, Image as ImageIcon
 } from 'lucide-react';
 import { gcategories, TAG_SUGESTOES } from '../../lib/categorias';
+import { useRouter } from 'next/router';
 
 export default function ManageStore() {
   const [storeData, setStoreData] = useState(null);
@@ -24,7 +25,7 @@ export default function ManageStore() {
   const [showPreview, setShowPreview] = useState(false);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
   const [tagInput, setTagInput] = useState('');
-
+ const router = useRouter();
 
   // 🔹 Inicializar dados padrão
   const initializeDefaultData = (existingData = {}) => {
@@ -778,7 +779,8 @@ export default function ManageStore() {
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 sticky top-0 z-40 shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <button className="mr-4 p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all duration-200 inline-flex">
+            <button className="mr-4 p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all duration-200 inline-flex"
+              onClick={() => router.back()}>
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>

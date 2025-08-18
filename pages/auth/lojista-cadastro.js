@@ -137,7 +137,7 @@ export default function LojistaCadastroPage() {
         <div className="text-center mb-8">
           <Store className="w-16 h-16 text-white bg-gradient-to-r from-orange-500 to-amber-600 rounded-2xl mx-auto mb-4 flex items-center justify-center"/>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Cadastro de Loja</h1>
-          <p className="text-gray-600">Junte-se à nossa plataforma e comece a vender</p>
+          <p className="text-gray-600">Junte-se à nossa plataforma.</p>
         </div>
 
         {/* Barra de progresso */}
@@ -153,7 +153,10 @@ export default function LojistaCadastroPage() {
             ))}
           </div>
           <div className="flex justify-center mt-2 space-x-8 text-xs text-gray-500">
-            <span>Responsável</span><span>Loja</span><span>Localização</span><span>Configurações</span>
+            <span>Responsável</span>
+            <span>Loja</span>
+            <span>Localização</span>
+            <span>Horarios</span>
           </div>
         </div>
 

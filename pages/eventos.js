@@ -357,9 +357,12 @@ export default function EventosPage() {
                         <p className="text-xs text-gray-500">{formatTimeAgo(evento.dataPost)}</p>
                       </div>
                     </div>
+
+                    {/*  botão para menu
                     <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                       <MoreHorizontal className="w-4 h-4 text-gray-400" />
-                    </button>
+                    </button> */} 
+
                   </div>
                 </div>
 
@@ -417,13 +420,13 @@ export default function EventosPage() {
                     </div>
                   </div>
 
-                  {/* Estatísticas */}
+                  {/* Estatísticas
                   <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
                     <span>{evento.curtidas} curtidas</span>
                     <span>{evento.comentarios} comentários • {evento.compartilhamentos} compartilhamentos</span>
-                  </div>
+                  </div>  */}
 
-                  {/* Botões de ação com verificação de login */}
+                  {/* Botões de ação com verificação de login 
                   <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                     <div className="flex items-center space-x-1">
                       <button
@@ -477,7 +480,7 @@ export default function EventosPage() {
                         <Share2 className="w-4 h-4" />
                       </button>
                     </div>
-                  </div>
+                  </div>  */}
                 </div>
               </div>
             ))}

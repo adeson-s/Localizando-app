@@ -94,13 +94,13 @@ export default function Perfil() {
   const menuItemsLojista = [
     { id: 'manage-store', title: 'Gerenciar Loja', subtitle: 'Cadastro, edição e horários', icon: Store, color: 'text-blue-500', bgColor: 'bg-blue-50' },
     { id: 'estatisticas', title: 'Estatísticas', subtitle: `${profileData.storeViews} visualizações`, icon: BarChart3, color: 'text-purple-500', bgColor: 'bg-purple-50' },
-    { id: 'customers', title: 'Clientes', subtitle: 'Avaliações e feedback', icon: Users, color: 'text-pink-500', bgColor: 'bg-pink-50' },
-    { id: 'website', title: 'Site e Redes Sociais', subtitle: 'Links externos', icon: Globe, color: 'text-cyan-500', bgColor: 'bg-cyan-50' },
+    //{ id: 'customers', title: 'Clientes', subtitle: 'Avaliações e feedback', icon: Users, color: 'text-pink-500', bgColor: 'bg-pink-50' },
+    //{ id: 'website', title: 'Site e Redes Sociais', subtitle: 'Links externos', icon: Globe, color: 'text-cyan-500', bgColor: 'bg-cyan-50' },
   ];
 
   const bottomMenuItems = [
     { id: 'help', title: 'Ajuda e Suporte', icon: HelpCircle, color: 'text-gray-500' },
-    { id: 'privacy', title: 'Privacidade', icon: Shield, color: 'text-gray-500' },
+    { id: 'politica-privacidade', title: 'Privacidade', icon: Shield, color: 'text-gray-500' },
   ];
 
   const currentMenuItems = isLojista ? menuItemsLojista : menuItemsUsuario;
@@ -233,6 +233,7 @@ export default function Perfil() {
         <div className="p-4">
           {/* menu */}
           <div className="space-y-3">
+
             {currentMenuItems.map((item) => {
               const IconComponent = item.icon;
 
@@ -261,20 +262,30 @@ export default function Perfil() {
 
           {/* rodapé */}
           <div className="mt-8 pt-6 border-t border-gray-100">
-            {bottomMenuItems.map((item) => {
+
+ {bottomMenuItems.map((item) => {
               const IconComponent = item.icon;
+
+              // Define a rota com base no tipo de usuário
+              const basePath = isLojista ? '/termos' : '/termos';
+              const href = `${basePath}/${item.id}`;
+
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => handleMenuClick(item.id)}
+                  href={href}
                   className="w-full flex items-center p-3 hover:bg-gray-50 rounded-xl transition-colors"
                 >
-                  <IconComponent className={`w-5 h-5 ${item.color} mr-3`} />
+                 
+                    <IconComponent className={`w-5 h-5 ${item.color} mr-3`} />
                   <span className="text-gray-700 font-medium">{item.title}</span>
                   <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
-                </button>
+                </Link>
               );
             })}
+
+
+
           </div>
 
           <div className="mt-6">
