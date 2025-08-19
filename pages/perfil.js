@@ -45,7 +45,7 @@ export default function Perfil() {
             lat: data.lat || "",
             lng: data.lng || "",
             logoUrl: data.logoUrl || data.logoPreview || "",
-            image: data.imageURL || data.logoUrl || data.logoPreview || "",
+            image: data.imageURL || data.logoUrl || data.logoPreview ||  "",
             type: data.category || "",
             address: `${data.address || ""}, ${data.neighborhood || ""}, ${data.city || ""} - ${data.state || ""}`,
             hours: data.schedule ? formatSchedule(data.schedule) : "",
@@ -68,7 +68,7 @@ export default function Perfil() {
   const profileData = {
     name: user?.name || "Convidado",
     email: user?.email || "",
-    avatar: storeData?.logoUrl || user.photoURL || null,
+    avatar: user?.photoURL || storeData?.logoUrl || null,
     favoriteCount: 12,
     reviewCount: 8,
     nameLoja: storeData?.nameLoja || "",
@@ -78,12 +78,17 @@ export default function Perfil() {
     storeProducts: 25
   };
 
+  console.log("Avatar URL:", profileData.avatar);
+  console.log("user object:", user);
+console.log("storeData:", storeData);
+
+
   const menuItemsUsuario = [
     { id: 'profile', title: 'Meu Perfil', subtitle: 'Informações pessoais', icon: User, color: 'text-blue-500', bgColor: 'bg-blue-50' },    
     
-    { id: 'favorites', title: 'Meus Favoritos', subtitle: `${profileData.favoriteCount} lojas favoritadas`, icon: Heart, color: 'text-red-500', bgColor: 'bg-red-50' },
+   // { id: 'favorites', title: 'Meus Favoritos', subtitle: `${profileData.favoriteCount} lojas favoritadas`, icon: Heart, color: 'text-red-500', bgColor: 'bg-red-50' },
     
-    { id: 'reviews', title: 'Minhas Avaliações', subtitle: `${profileData.reviewCount} avaliações feitas`, icon: Star, color: 'text-yellow-500', bgColor: 'bg-yellow-50' },
+   // { id: 'reviews', title: 'Minhas Avaliações', subtitle: `${profileData.reviewCount} avaliações feitas`, icon: Star, color: 'text-yellow-500', bgColor: 'bg-yellow-50' },
     
     //{ id: 'notifications', title: 'Notificações', subtitle: 'Preferências de notificação', icon: Bell, color: 'text-purple-500', bgColor: 'bg-purple-50' },
     
@@ -173,14 +178,11 @@ export default function Perfil() {
                 <div className="relative">
                   <div className="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-2xl font-bold">
                     {profileData.avatar ? (
-                      <img src={profileData.avatar} alt="Avatar" className="w-20 h-20 rounded-full object-cover" />
+                      <img src={profileData.avatar } alt="Avatar" className="w-20 h-20 rounded-full object-cover" />
                     ) : (
                       profileData.name.charAt(0)
                     )}
-                  </div>
-                  <button className="absolute -bottom-1 -right-1 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
-                    <Camera className="w-4 h-4 text-white" />
-                  </button>
+                  </div>                  
                 </div>
                 <div className="ml-4">
                   <h2 className="text-xl font-bold">{profileData.name}</h2>

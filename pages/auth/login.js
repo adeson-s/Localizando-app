@@ -29,7 +29,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
-
+ const [profile, setProfile] = useState(null); 
 
   async function handleEmailLogin(e) {
     e.preventDefault();
@@ -49,17 +49,29 @@ export default function LoginPage() {
   }
 
   async function handleGoogle() {
-    setErr("");
-    setLoading(true);
-    try {
-      await signInWithGoogle();
-      setSuccess(true);
-    } catch (e) {
-      setErr(e.message);
-    } finally {
-      setLoading(false);
-    }
+  setErr("");
+  setLoading(true);
+  try {
+    const { user } = await signInWithGoogle();
+console.log("Avatar URL:", user.photoURL);
+console.log("User completo:", user);
+
+const profileData = {
+  name: user.displayName || "Convidado",
+  email: user.email || "",
+  avatar: user.photoURL || null,
+};
+setProfile(profileData);
+// salva em um estado (crie o useState para isso)
+    setSuccess(true);
+
+  } catch (e) {
+    setErr(e.message);
+  } finally {
+    setLoading(false);
   }
+}
+
 
   if (success) {
     return (

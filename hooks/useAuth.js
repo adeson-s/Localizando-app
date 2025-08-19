@@ -34,6 +34,8 @@ function useProvideAuth() {
           name: userData.ownerName || userData.name || fbUser.displayName || "",
           isLojista: userData.isLojista || false,
           storeId: userData.storeId || null,
+           photoURL: fbUser.photoURL || null,
+          
           // ... outros campos
         });
 
