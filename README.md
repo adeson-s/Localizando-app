@@ -1,125 +1,56 @@
-📍 Localizando App
+# 📍 Localizando App
 
-🔗 Live Demo: https://localizando-app.vercel.app/
+🔗 Live: https://localizando-app.vercel.app/
 
+## 💡 Sobre o projeto
 
-💼 Sobre o Projeto
+O Localizando App é uma aplicação web full stack focada em geolocalização, que conecta usuários a estabelecimentos próximos em tempo real.
 
-O Localizando App é uma aplicação web full stack desenvolvida como projeto principal do meu portfólio, com foco em geolocalização, escalabilidade e experiência do usuário.
+A plataforma permite visualizar lojas em mapa interativo, buscar por proximidade e gerenciar dados com diferentes níveis de acesso.
 
-A plataforma conecta usuários e estabelecimentos locais, permitindo descoberta de lojas próximas, visualização em mapa e gerenciamento completo de dados em tempo real.
+## 🚀 Principais funcionalidades
 
-🧠 Problema Resolvido
+* 📍 Geolocalização em tempo real
+* 🗺️ Mapa interativo com exibição dinâmica de estabelecimentos
+* 🔎 Busca por proximidade
+* 🔐 Autenticação e controle de acesso (RBAC)
+* 🏪 Cadastro e gerenciamento de lojas
+* 📅 Criação e visualização de eventos
+* 📊 Dashboard administrativo
+* 📸 Upload de imagens
 
-Muitas aplicações locais falham em:
+## 🧠 Problema resolvido
 
-Mostrar estabelecimentos relevantes por proximidade
-Oferecer uma experiência integrada entre mapa + busca
-Gerenciar diferentes tipos de usuários
+Aplicações locais frequentemente não integram bem mapa, busca e gestão de usuários.
 
-O Localizando App resolve isso com:
+O projeto resolve isso ao unificar:
 
-Geolocalização precisa
-Interface intuitiva
-Sistema de permissões por nível de usuário
+* localização em tempo real
+* experiência intuitiva
+* controle de permissões
 
-🚀 Funcionalidades
+## 🛠️ Tecnologias
 
-🔐 Autenticação e Permissões
-Firebase Authentication
-Controle de acesso (RBAC):
-🏪 Loja
-👤 Cliente
+* Frontend: React / Next.js
+* Backend: Firebase (Auth, Firestore, Storage)
+* Infraestrutura: Vercel
+* APIs: Geolocalização
 
-🗺️ Mapa Interativo
-Geolocalização do usuário
-Lojas exibidas dinamicamente no mapa
-Atualização em tempo real
+## 🧩 Arquitetura
 
-🔎 Busca por Proximidade
-Listagem de lojas próximas
-Filtro baseado na localização
-
-🏪 Gestão de Lojas
-Criação e edição de estabelecimentos
-Associação de usuários
-
-📅 Eventos da Cidade
-Criação de eventos
-Exibição para usuários
-
-📊 Dashboard
-Painel administrativo
-Controle e visualização de dados
-
-📸 Upload de Imagens
-Envio via API
-Integração com Firebase Storage
-
-👤 Perfil do Usuário
-Atualização de dados
-Configurações da conta
-
-🛠️ Stack Tecnológica
-
-Frontend
-
-React.js / Next.js
-
-Backend (BaaS)
-
-Firebase
-Authentication
-Firestore (NoSQL em tempo real)
-Storage
-
-Infraestrutura
-
-Vercel (deploy e hosting)
-
-APIs
-
-Geolocalização
-Upload de arquivos
-🧩 Arquitetura (Visão Geral)
 Frontend (Next.js)
-   ↓
-Firebase Authentication → Controle de acesso
-   ↓
-Firestore → Dados em tempo real
-   ↓
-Storage → Upload de imagens
-   ↓
-Map API → Geolocalização e renderização
-⚙️ Decisões Técnicas
-🔥 Firebase como Backend
+→ Firebase Authentication (auth e permissões)
+→ Firestore (dados em tempo real)
+→ Storage (imagens)
+→ API de mapas (geolocalização)
 
-Escolhido para:
+## ⚙️ Destaques técnicos
 
-Reduzir complexidade de backend
-Escalar rapidamente
-Trabalhar com dados em tempo real
+* Arquitetura serverless
+* Controle de acesso baseado em funções (RBAC)
+* Dados em tempo real com Firestore
+* Deploy contínuo com Vercel
 
-🗺️ Uso de Geolocalização
-Permite experiência personalizada
-Base para busca inteligente por proximidade
+## 🎯 Objetivo
 
-🔐 RBAC (Role-Based Access Control)
-Separação clara entre loja e cliente
-Facilita expansão futura (ex: admin)
-
-☁️ Arquitetura Serverless
-Deploy rápido
-Alta disponibilidade
-Baixo custo inicial
-
-📄 Licença
-
-MIT License
-
-Este projeto foi desenvolvido com foco em demonstrar:
-
-Capacidade de construir aplicações completas
-Integração com serviços modernos (Firebase)
-Boas práticas de arquitetura e organização
-Pensamento voltado a produto real
+Demonstrar a capacidade de desenvolver aplicações completas, integrando frontend, backend e serviços modernos com foco em produto real.
